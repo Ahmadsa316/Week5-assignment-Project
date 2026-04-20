@@ -12,30 +12,32 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
+                sh 'pwd'
+                sh 'ls -la'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn clean compile'
+                sh 'mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn test'
+                sh 'mvn test'
             }
         }
 
         stage('Coverage Report') {
             steps {
-                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn jacoco:report'
+                sh 'mvn jacoco:report'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn package -DskipTests'
+                sh 'mvn package -DskipTests'
             }
         }
 
