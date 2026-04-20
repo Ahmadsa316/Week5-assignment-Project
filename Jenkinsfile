@@ -1,14 +1,9 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven'
-        jdk 'JDK17'
-    }
-
     environment {
         DOCKERHUB_CREDENTIALS_ID = 'dockerhub-creds'
-        DOCKERHUB_REPO = 'YOUR_DOCKERHUB_USERNAME/week4-assignment'
+        DOCKERHUB_REPO = 'ahmadsa316/week5-assignment-project'
         DOCKER_IMAGE_TAG = 'latest'
     }
 
@@ -22,39 +17,25 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean compile'
+                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn clean compile'
             }
         }
 
         stage('Test') {
             steps {
-                sh 'mvn test'
+                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn test'
             }
         }
 
         stage('Coverage Report') {
             steps {
-                sh 'mvn jacoco:report'
+                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn jacoco:report'
             }
         }
 
         stage('Package') {
             steps {
-                sh 'mvn package -DskipTests'
-            }
-        }
-
-        stage('Publish Test Results') {
-            steps {
-                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
-            }
-        }
-
-        stage('Publish Coverage Report') {
-            steps {
-                jacoco execPattern: '**/target/jacoco.exec',
-                       classPattern: '**/target/classes',
-                       sourcePattern: '**/src/main/java'
+                sh 'docker run --rm -v "$PWD":/app -w /app maven:3.9.6-eclipse-temurin-17 mvn package -DskipTests'
             }
         }
 
@@ -79,11 +60,14 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true, onlyIfSuccessful: false
+            archiveArtifacts artifacts: 'target/*.jar', allowEmptyArchive: true
+            junit allowEmptyResults: true, testResults: 'target/surefire-reports/*.xml'
         }
+
         success {
             echo 'Pipeline completed successfully.'
         }
+
         failure {
             echo 'Pipeline failed.'
         }
